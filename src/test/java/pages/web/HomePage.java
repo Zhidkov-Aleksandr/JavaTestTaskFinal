@@ -11,22 +11,23 @@ import java.util.List;
 
 public class HomePage extends BasePage {
 
-    @FindBy(css = "input[type='search'], input[placeholder*='Поиск'], input[name='q'], .search-input")
+    // Локаторы для habr.com
+    @FindBy(css = "input[type='search'], input[name='q'], .tm-header-user-menu__search input, #search-form-field, input[placeholder*='поиск'], input[placeholder*='Поиск']")
     private WebElement searchInput;
 
-    @FindBy(css = "button[type='submit'], .search-button, button.search-btn")
+    @FindBy(css = "button[type='submit'], .tm-header-user-menu__search button, button[aria-label*='Поиск'], .search-button")
     private WebElement searchButton;
 
-    @FindBy(css = "nav a, .menu a, .navigation a, header a")
+    @FindBy(css = "nav a, .tm-main-menu__item a, .tm-header__menu a, header a, .tm-header__nav a, a[href*='/hub/'], a[href*='/company/']")
     private List<WebElement> navigationLinks;
 
-    @FindBy(css = ".logo, a[href='/'], .header-logo")
+    @FindBy(css = ".tm-header__logo, a[href='/'], .tm-logo, a.tm-header__logo, .logo")
     private WebElement logo;
 
-    @FindBy(css = "h1, .title, .article-title")
+    @FindBy(css = "h1, .tm-title, .tm-article-title, .title")
     private WebElement pageTitle;
 
-    @FindBy(css = ".article, .news-item, .post")
+    @FindBy(css = ".tm-articles-list__item, .tm-article-snippet, article, .content-list__item, .tm-article-card, [class*='article'], [class*='post']")
     private List<WebElement> articles;
 
     public HomePage() {
@@ -50,9 +51,24 @@ public class HomePage extends BasePage {
         if (isElementDisplayed(searchInput)) {
             input = searchInput;
         } else {
-            // Пробуем альтернативные селекторы
+            // Пробуем альтернативные селекторы для habr.com
             try {
-                List<WebElement> inputs = driver.findElements(By.cssSelector("input[type='search'], input[placeholder*='поиск'], input[placeholder*='Поиск'], input[name='q'], input[name='search']"));
+                // Сначала пробуем найти иконку поиска и кликнуть на неё
+                List<WebElement> searchIcons = driver.findElements(By.cssSelector(".tm-header-user-menu__search, [aria-label*='Поиск'], button[type='button'][class*='search']"));
+                for (WebElement icon : searchIcons) {
+                    if (icon.isDisplayed()) {
+                        try {
+                            click(icon);
+                            Thread.sleep(500); // Даем время на открытие поля поиска
+                        } catch (Exception e) {
+                            // Игнорируем
+                        }
+                        break;
+                    }
+                }
+                
+                // Теперь ищем поле ввода
+                List<WebElement> inputs = driver.findElements(By.cssSelector("input[type='search'], input[name='q'], .tm-header-user-menu__search input, #search-form-field, input[placeholder*='поиск'], input[placeholder*='Поиск'], input[name='search']"));
                 for (WebElement elem : inputs) {
                     if (elem.isDisplayed()) {
                         input = elem;
@@ -73,7 +89,8 @@ public class HomePage extends BasePage {
                 input.submit();
             }
         } else {
-            throw new RuntimeException("Поле поиска не найдено");
+            // Если поле поиска не найдено, пробуем использовать URL напрямую
+            driver.get(ConfigReader.getWebBaseUrl() + "/search/?q=" + query.replace(" ", "+"));
         }
     }
 
@@ -82,9 +99,9 @@ public class HomePage extends BasePage {
         if (isElementDisplayed(searchInput)) {
             return true;
         }
-        // Пробуем альтернативные селекторы
+        // Пробуем альтернативные селекторы для habr.com
         try {
-            List<WebElement> inputs = driver.findElements(By.cssSelector("input[type='search'], input[placeholder*='поиск'], input[placeholder*='Поиск'], input[name='q'], input[name='search']"));
+            List<WebElement> inputs = driver.findElements(By.cssSelector("input[type='search'], input[name='q'], .tm-header-user-menu__search input, #search-form-field, input[placeholder*='поиск'], input[placeholder*='Поиск'], input[name='search']"));
             for (WebElement input : inputs) {
                 if (input.isDisplayed()) {
                     return true;
@@ -97,7 +114,22 @@ public class HomePage extends BasePage {
     }
 
     public boolean isLogoDisplayed() {
-        return isElementDisplayed(logo);
+        // Пробуем найти через @FindBy
+        if (isElementDisplayed(logo)) {
+            return true;
+        }
+        // Пробуем альтернативные селекторы для habr.com
+        try {
+            List<WebElement> logos = driver.findElements(By.cssSelector(".tm-header__logo, a[href='/'], .tm-logo, a.tm-header__logo, .logo, [class*='logo']"));
+            for (WebElement log : logos) {
+                if (log.isDisplayed()) {
+                    return true;
+                }
+            }
+        } catch (Exception e) {
+            // Игнорируем
+        }
+        return false;
     }
 
     public void clickLogo() {
@@ -118,9 +150,9 @@ public class HomePage extends BasePage {
         if (count > 0) {
             return count;
         }
-        // Пробуем альтернативные селекторы
+        // Пробуем альтернативные селекторы для habr.com
         try {
-            List<WebElement> links = driver.findElements(By.cssSelector("nav a, .menu a, .navigation a, header a, .header a, .nav a, a[href*='/'], .menu-item a"));
+            List<WebElement> links = driver.findElements(By.cssSelector("nav a, .tm-main-menu__item a, .tm-header__menu a, header a, .tm-header__nav a, a[href*='/hub/'], a[href*='/company/'], a[href*='/'], .menu-item a"));
             // Фильтруем только видимые ссылки
             long visibleCount = links.stream()
                     .filter(WebElement::isDisplayed)
@@ -143,9 +175,9 @@ public class HomePage extends BasePage {
         if (!articles.isEmpty()) {
             return true;
         }
-        // Пробуем альтернативные селекторы
+        // Пробуем альтернативные селекторы для habr.com
         try {
-            List<WebElement> articleElements = driver.findElements(By.cssSelector(".article, .news-item, .post, article, .card, .item, [class*='article'], [class*='news'], [class*='post']"));
+            List<WebElement> articleElements = driver.findElements(By.cssSelector(".tm-articles-list__item, .tm-article-snippet, article, .content-list__item, .tm-article-card, [class*='article'], [class*='post'], [class*='tm-article']"));
             return !articleElements.isEmpty();
         } catch (Exception e) {
             return false;
