@@ -52,14 +52,15 @@ public class NavigationTest extends BaseWebTest {
                 }
             }
             
-            if (!urlChanged && linksCount > 0) {
-                // Если URL не изменился, проверяем, что навигация вообще работает
-                // (может быть, мы уже на нужной странице)
+            if (!urlChanged) {
+                // Если URL не изменился после всех попыток, проверяем, что навигация вообще работает
+                // (может быть, мы уже на нужной странице или ссылки не меняют URL)
                 String currentUrl = WebDriverManager.getDriver().getCurrentUrl();
                 Assert.assertNotNull(currentUrl, "URL должен быть не null");
                 Assert.assertTrue(currentUrl.contains("habr.com"), 
                         "URL должен содержать habr.com");
-            } else if (urlChanged) {
+            } else {
+                // URL изменился - проверяем, что он действительно отличается от начального
                 String newUrl = WebDriverManager.getDriver().getCurrentUrl();
                 Assert.assertNotEquals(initialUrl, newUrl, 
                         "URL должен измениться после клика на навигационную ссылку");

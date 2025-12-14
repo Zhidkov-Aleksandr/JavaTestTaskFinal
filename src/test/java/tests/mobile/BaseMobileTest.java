@@ -12,9 +12,9 @@ import java.net.URI;
  * Базовый класс для мобильных тестов.
  * Этот класс не содержит тестовых методов - он предоставляет общую настройку (setUp/tearDown)
  * для всех мобильных тестов, которые наследуются от него.
- * 
  * Реальные тесты находятся в классах SearchTest и ArticleTest.
  */
+@SuppressWarnings("unused")
 public class BaseMobileTest {
     
     @BeforeClass
