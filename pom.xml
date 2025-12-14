@@ -30,8 +30,9 @@
 
         <!-- Selenium Chrome DevTools Protocol (CDP) -->
         <!-- Используем последнюю доступную версию CDP для Selenium 4.15.0 -->
-        <!-- Примечание: для Chrome 145 точная версия CDP может быть недоступна, -->
-        <!-- но Selenium автоматически использует ближайшую совместимую версию -->
+        <!-- Примечание: Chrome 145 - очень новая версия, точная версия CDP v145 недоступна в Selenium 4.15.0 -->
+        <!-- Предупреждения о CDP не критичны и не влияют на работу тестов -->
+        <!-- Selenium автоматически использует ближайшую совместимую версию CDP (v119) -->
         <dependency>
             <groupId>org.seleniumhq.selenium</groupId>
             <artifactId>selenium-devtools-v119</artifactId>
