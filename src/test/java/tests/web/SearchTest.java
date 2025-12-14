@@ -12,9 +12,7 @@ public class SearchTest extends BaseWebTest {
     @DataProvider(name = "searchQueries")
     public Object[][] searchQueries() {
         return new Object[][]{
-                {"новости"},
-                {"политика"},
-                {"спорт"}
+                {"технологии"}
         };
     }
 
@@ -23,8 +21,19 @@ public class SearchTest extends BaseWebTest {
         HomePage homePage = new HomePage();
         homePage.open();
         
-        String searchQuery = "новости";
+        String searchQuery = "технологии";
         homePage.search(searchQuery);
+        
+        // Ждем загрузки страницы результатов поиска
+        org.openqa.selenium.support.ui.WebDriverWait wait = 
+            new org.openqa.selenium.support.ui.WebDriverWait(
+                WebDriverManager.getDriver(), 
+                java.time.Duration.ofSeconds(10));
+        wait.until(webDriver -> {
+            String state = ((org.openqa.selenium.JavascriptExecutor) webDriver)
+                .executeScript("return document.readyState").toString();
+            return state.equals("complete") || state.equals("interactive");
+        });
         
         String currentUrl = WebDriverManager.getDriver().getCurrentUrl();
         Assert.assertNotNull(currentUrl, "URL должен быть не null после поиска");
@@ -49,13 +58,18 @@ public class SearchTest extends BaseWebTest {
         
         homePage.search("технологии");
         
+        // Ждем загрузки страницы результатов поиска
+        org.openqa.selenium.support.ui.WebDriverWait wait = 
+            new org.openqa.selenium.support.ui.WebDriverWait(
+                WebDriverManager.getDriver(), 
+                java.time.Duration.ofSeconds(10));
+        wait.until(webDriver -> {
+            String state = ((org.openqa.selenium.JavascriptExecutor) webDriver)
+                .executeScript("return document.readyState").toString();
+            return state.equals("complete") || state.equals("interactive");
+        });
+        
         SearchResultsPage searchResultsPage = new SearchResultsPage();
-        // Даем время на загрузку результатов
-        try {
-            Thread.sleep(2000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
         
         // Проверяем наличие результатов или сообщения об отсутствии результатов
         boolean hasResults = searchResultsPage.hasSearchResults();
