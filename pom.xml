@@ -28,6 +28,16 @@
             <version>${selenium.version}</version>
         </dependency>
 
+        <!-- Selenium Chrome DevTools Protocol (CDP) -->
+        <!-- Используем последнюю доступную версию CDP для Selenium 4.15.0 -->
+        <!-- Примечание: для Chrome 145 точная версия CDP может быть недоступна, -->
+        <!-- но Selenium автоматически использует ближайшую совместимую версию -->
+        <dependency>
+            <groupId>org.seleniumhq.selenium</groupId>
+            <artifactId>selenium-devtools-v119</artifactId>
+            <version>${selenium.version}</version>
+        </dependency>
+
         <!-- WebDriverManager -->
         <dependency>
             <groupId>io.github.bonigarcia</groupId>
