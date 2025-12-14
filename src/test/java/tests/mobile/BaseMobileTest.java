@@ -30,16 +30,37 @@ public class BaseMobileTest {
     
     @BeforeClass
     public void setUp() {
-        // Проверяем доступность Appium Server перед запуском тестов
-        if (!isAppiumServerRunning()) {
-            throw new SkipException("Appium Server не запущен. Пропускаем мобильные тесты. " +
-                    "Для запуска мобильных тестов запустите Appium Server: appium");
-        }
+        // Пытаемся создать драйвер - если не получается, пропускаем тесты с понятным сообщением
         try {
             AppiumDriverManager.getDriver();
+        } catch (org.openqa.selenium.SessionNotCreatedException e) {
+            String errorMsg = e.getMessage();
+            if (errorMsg != null && (errorMsg.contains("ConnectException") || 
+                    errorMsg.contains("Connection refused") || 
+                    errorMsg.contains("Connection") && errorMsg.contains("refused"))) {
+                throw new SkipException("Appium Server не запущен или недоступен на " + 
+                        utils.ConfigReader.getAppiumServerUrl() + 
+                        ". Пропускаем мобильные тесты. Для запуска мобильных тестов запустите Appium Server: appium");
+            } else if (errorMsg != null && errorMsg.contains("device")) {
+                throw new SkipException("Эмулятор/устройство не подключено. " +
+                        "Проверьте подключение: adb devices. " +
+                        "Убедитесь, что эмулятор запущен или устройство подключено. Ошибка: " + e.getMessage());
+            } else {
+                throw new SkipException("Не удалось создать сессию Appium. " +
+                        "Убедитесь, что Appium Server запущен, эмулятор подключен (adb devices) и " +
+                        "приложение Wikipedia установлено. Ошибка: " + e.getMessage());
+            }
         } catch (Exception e) {
-            throw new SkipException("Не удалось подключиться к Appium Server или эмулятору. " +
-                    "Убедитесь, что Appium Server запущен и эмулятор подключен. Ошибка: " + e.getMessage());
+            String errorMsg = e.getMessage();
+            if (errorMsg != null && (errorMsg.contains("ConnectException") || 
+                    errorMsg.contains("Connection refused") || 
+                    errorMsg.contains("UnknownHostException"))) {
+                throw new SkipException("Не удалось подключиться к Appium Server на " + 
+                        utils.ConfigReader.getAppiumServerUrl() + 
+                        ". Убедитесь, что Appium Server запущен: appium");
+            }
+            throw new SkipException("Ошибка при инициализации Appium Driver: " + e.getMessage() + 
+                    ". Проверьте настройки в config.properties, убедитесь, что Appium Server запущен и эмулятор подключен.");
         }
     }
 
@@ -55,15 +76,28 @@ public class BaseMobileTest {
     private boolean isAppiumServerRunning() {
         try {
             String appiumUrl = utils.ConfigReader.getAppiumServerUrl();
-            java.net.URL url = URI.create(appiumUrl + "/status").toURL();
+            // Пробуем подключиться к Appium Server
+            // Если получаем любой ответ (даже ошибку), значит сервер работает
+            java.net.URL url = URI.create(appiumUrl).toURL();
             HttpURLConnection connection = (HttpURLConnection) url.openConnection();
             connection.setRequestMethod("GET");
             connection.setConnectTimeout(2000);
             connection.setReadTimeout(2000);
-            int responseCode = connection.getResponseCode();
-            connection.disconnect();
-            return responseCode == 200;
+            try {
+                int responseCode = connection.getResponseCode();
+                connection.disconnect();
+                // Любой ответ от сервера означает, что он работает
+                return true;
+            } catch (java.io.IOException e) {
+                // Если получили IOException при чтении ответа, но соединение установлено - сервер работает
+                connection.disconnect();
+                return true;
+            }
+        } catch (java.net.ConnectException e) {
+            // Не удалось подключиться - сервер не запущен
+            return false;
         } catch (Exception e) {
+            // Другие ошибки - считаем, что сервер не доступен
             return false;
         }
     }
