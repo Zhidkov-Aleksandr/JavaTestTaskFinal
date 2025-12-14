@@ -24,7 +24,16 @@ public class WebDriverManager {
                     ChromeOptions chromeOptions = new ChromeOptions();
                     chromeOptions.addArguments("--start-maximized");
                     chromeOptions.addArguments("--disable-notifications");
+                    chromeOptions.addArguments("--disable-blink-features=AutomationControlled");
+                    chromeOptions.addArguments("--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36");
+                    chromeOptions.setExperimentalOption("excludeSwitches", java.util.Arrays.asList("enable-automation"));
+                    chromeOptions.setExperimentalOption("useAutomationExtension", false);
+                    // Используем стратегию "eager" - ждем только DOM и ресурсы, не ждем полной загрузки
+                    chromeOptions.setPageLoadStrategy(org.openqa.selenium.PageLoadStrategy.EAGER);
                     driver = new ChromeDriver(chromeOptions);
+                    // Устанавливаем таймауты
+                    driver.manage().timeouts().pageLoadTimeout(java.time.Duration.ofSeconds(60));
+                    driver.manage().timeouts().implicitlyWait(java.time.Duration.ofSeconds(5));
                     break;
                 case "firefox":
                     io.github.bonigarcia.wdm.WebDriverManager.firefoxdriver().setup();

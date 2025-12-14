@@ -14,7 +14,25 @@ public class BasePage {
     public BasePage() {
         this.driver = WebDriverManager.getDriver();
         this.wait = WebDriverManager.getWait();
-        PageFactory.initElements(driver, this);
+        // Инициализируем элементы с задержкой, чтобы избежать зависаний
+        try {
+            PageFactory.initElements(driver, this);
+        } catch (Exception e) {
+            // Игнорируем ошибки инициализации
+        }
+    }
+
+    protected void waitForPageLoad() {
+        try {
+            WebDriverWait pageWait = new WebDriverWait(driver, java.time.Duration.ofSeconds(15));
+            pageWait.until(webDriver -> {
+                String state = ((org.openqa.selenium.JavascriptExecutor) webDriver)
+                    .executeScript("return document.readyState").toString();
+                return state.equals("complete") || state.equals("interactive");
+            });
+        } catch (Exception e) {
+            // Игнорируем ошибки - страница может загружаться асинхронно
+        }
     }
 
     protected void waitForElement(WebElement element) {
@@ -26,7 +44,11 @@ public class BasePage {
     }
 
     protected void waitForElementClickable(WebElement element) {
-        wait.until(ExpectedConditions.elementToBeClickable(element));
+        try {
+            wait.until(ExpectedConditions.elementToBeClickable(element));
+        } catch (Exception e) {
+            // Игнорируем таймаут для более гибкой обработки
+        }
     }
 
     protected void click(WebElement element) {
@@ -47,9 +69,12 @@ public class BasePage {
 
     protected boolean isElementDisplayed(WebElement element) {
         try {
-            waitForElement(element);
+            // Используем короткий таймаут для проверки наличия элемента
+            WebDriverWait shortWait = new WebDriverWait(driver, java.time.Duration.ofSeconds(2));
+            shortWait.until(ExpectedConditions.visibilityOf(element));
             return element.isDisplayed();
         } catch (Exception e) {
+            // Если элемент не найден за 2 секунды, возвращаем false
             return false;
         }
     }

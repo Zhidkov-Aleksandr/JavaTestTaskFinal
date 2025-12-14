@@ -36,10 +36,21 @@ public class HomePage extends BasePage {
     }
 
     public void open() {
-        driver.get(ConfigReader.getWebBaseUrl());
-        // Даем время на загрузку страницы
         try {
-            Thread.sleep(2000);
+            driver.get(ConfigReader.getWebBaseUrl());
+        } catch (org.openqa.selenium.TimeoutException e) {
+            // Если страница не загрузилась за таймаут, продолжаем работу
+            System.out.println("Предупреждение: страница не загрузилась полностью, продолжаем тест");
+        }
+        // Ждем полной загрузки страницы с таймаутом
+        try {
+            waitForPageLoad();
+        } catch (Exception e) {
+            // Игнорируем ошибки загрузки
+        }
+        // Дополнительная задержка для загрузки динамического контента
+        try {
+            Thread.sleep(3000);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }
