@@ -36,7 +36,16 @@ public class NavigationTest extends BaseWebTest {
                     } catch (Exception e) {
                         // URL не изменился, пробуем следующую ссылку
                         homePage.open(); // Возвращаемся на главную
-                        Thread.sleep(1000);
+                        // Ждем загрузки страницы через явное ожидание
+                        org.openqa.selenium.support.ui.WebDriverWait pageWait = 
+                            new org.openqa.selenium.support.ui.WebDriverWait(
+                                WebDriverManager.getDriver(), 
+                                java.time.Duration.ofSeconds(2));
+                        pageWait.until(webDriver -> {
+                            String state = ((org.openqa.selenium.JavascriptExecutor) webDriver)
+                                .executeScript("return document.readyState").toString();
+                            return state.equals("complete") || state.equals("interactive");
+                        });
                     }
                 } catch (Exception e) {
                     // Игнорируем ошибки и пробуем следующую ссылку
@@ -67,21 +76,39 @@ public class NavigationTest extends BaseWebTest {
         homePage.open();
         
         // Переходим на другую страницу
+        String urlBeforeLogoClick = WebDriverManager.getDriver().getCurrentUrl();
         if (homePage.getNavigationLinksCount() > 0) {
             homePage.clickNavigationLink(0);
+            // Ждем изменения URL или загрузки страницы
+            org.openqa.selenium.support.ui.WebDriverWait wait = 
+                new org.openqa.selenium.support.ui.WebDriverWait(
+                    WebDriverManager.getDriver(), 
+                    java.time.Duration.ofSeconds(5));
             try {
-                Thread.sleep(2000);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
+                wait.until(org.openqa.selenium.support.ui.ExpectedConditions.not(
+                    org.openqa.selenium.support.ui.ExpectedConditions.urlToBe(urlBeforeLogoClick)));
+            } catch (Exception e) {
+                // URL не изменился, продолжаем
             }
         }
         
         homePage.clickLogo();
         
+        // Ждем изменения URL после клика по логотипу
+        org.openqa.selenium.support.ui.WebDriverWait logoWait = 
+            new org.openqa.selenium.support.ui.WebDriverWait(
+                WebDriverManager.getDriver(), 
+                java.time.Duration.ofSeconds(5));
         try {
-            Thread.sleep(2000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
+            // Ждем, пока URL изменится или страница загрузится
+            logoWait.until(webDriver -> {
+                String currentUrl = webDriver.getCurrentUrl();
+                String state = ((org.openqa.selenium.JavascriptExecutor) webDriver)
+                    .executeScript("return document.readyState").toString();
+                return (!currentUrl.equals(urlBeforeLogoClick) || state.equals("complete"));
+            });
+        } catch (Exception e) {
+            // Игнорируем таймаут
         }
         
         String urlAfterClick = WebDriverManager.getDriver().getCurrentUrl();

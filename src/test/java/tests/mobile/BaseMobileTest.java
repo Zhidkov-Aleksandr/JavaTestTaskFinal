@@ -8,6 +8,13 @@ import utils.AppiumDriverManager;
 import java.net.HttpURLConnection;
 import java.net.URI;
 
+/**
+ * Базовый класс для мобильных тестов.
+ * Этот класс не содержит тестовых методов - он предоставляет общую настройку (setUp/tearDown)
+ * для всех мобильных тестов, которые наследуются от него.
+ * 
+ * Реальные тесты находятся в классах SearchTest и ArticleTest.
+ */
 public class BaseMobileTest {
     
     @BeforeClass
